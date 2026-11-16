@@ -1,275 +1,209 @@
-import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import StandardScaler
 import streamlit as st
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Predictor Tributario y Flujo de Caja - SRI Ecuador",
-    page_icon="📊",
+    page_title="Red Neuronal Tributaria - Ecuador 🇪🇨",
+    page_icon="🧠",
     layout="wide",
 )
 
 # --- CRÉDITO OBLIGATORIO ---
-DEVELOPER_NAME = "Jonathan Daniel Toasa Quinga"
+DEVELOPER_NAME = "Jonathan Toasa"
 
-# Estilo visual personalizado (CSS limpio)
+# Estilos CSS personalizados para simular las 4 capas de la red neuronal
 st.markdown(
     """
     <style>
-    .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; }
-    .sub-header { font-size: 1.2rem; color: #555555; margin-bottom: 25px; }
-    .credit-tag { background-color: #f0f2f6; padding: 10px 15px; border-radius: 8px; font-weight: 600; color: #333; border-left: 5px solid #1f77b4; }
+    .main-title { font-size: 2.2rem; color: #1f77b4; font-weight: 800; text-align: center; }
+    .sub-title { font-size: 1.1rem; color: #555; text-align: center; margin-bottom: 30px; }
+    .layer-card { background-color: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; height: 100%; }
+    .layer-1 { border-top: 5px solid #1f77b4; }
+    .layer-2 { border-top: 5px solid #9467bd; }
+    .layer-3 { border-top: 5px solid #2ca02c; }
+    .layer-4 { border-top: 5px solid #d62728; }
+    .metric-box { background-color: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; text-align: center; margin-bottom: 10px; }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# Encabezado principal
 st.markdown(
-    '<p class="main-header">ecuadorFin-IA: Predictor Tributario & Flujo de Caja 🇪🇨</p>',
+    '<p class="main-title">🧠 Red Neuronal del IVA y del Impuesto a la Renta</p>',
     unsafe_allow_html=True,
 )
 st.markdown(
-    f'<div class="credit-tag">Desarrollado por {DEVELOPER_NAME}</div>',
+    f'<p class="sub-title">Modelo Predictivo e Interactivo Basado en el SRI y LORTI • Desarrollado por <b>{DEVELOPER_NAME}</b></p>',
     unsafe_allow_html=True,
 )
-st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
-st.sidebar.markdown(
-    f"### ⚙️ Panel de Configuración\n**Desarrollado por {DEVELOPER_NAME}**"
-)
-st.sidebar.markdown("---")
+# --- DISTRIBUCIÓN EN 4 CAPAS (ESTILO ARQUITECTURA NEURONAL) ---
+col_l1, col_l2, col_l3, col_l4 = st.columns(4)
 
-regimen_fiscal = st.sidebar.selectbox(
-    "Seleccione su Régimen Tributario (SRI):",
-    [
-        "RIMPE Emprendedor",
-        "Régimen General",
-        "RIMPE Negocio Popular (Cuota Fija)",
-    ],
-)
-
-st.sidebar.markdown("### 🎛️ Simulación de Factores Macroeconómicos")
-factor_crecimiento = (
-    st.sidebar.slider("Crecimiento Esperado de Ventas (%)", -20.0, 50.0, 5.0)
-    / 100.0
-)
-inflacion_gastos = (
-    st.sidebar.slider("Ajuste en Costos Operativos (%)", -10.0, 30.0, 2.0) / 100.0
-)
-
-# --- GENERACIÓN DE DATOS HISTÓRICOS REALISTAS (SRI / ECUADOR) ---
-@st.cache_data
-def generar_datos_historicos():
-    np.random.seed(42)
-    meses = pd.date_range(start="2023-01-01", end="2026-02-01", freq="MS")
-    n = len(meses)
-
-    # Tendencia estacional con crecimiento base
-    tendencia = np.linspace(10000, 22000, n)
-    ruido = np.random.normal(0, 1500, n)
-    estacionalidad = 2000 * np.sin(np.linspace(0, 3 * np.pi, n))
-
-    ventas = np.clip(tendencia + ruido + estacionalidad, 5000, None)
-    costos = ventas * np.random.uniform(0.55, 0.70, n)
-
-    # IVA (Tarifa general 15% vigente)
-    iva_cobrado = ventas * 0.15
-    iva_pagado = costos * 0.15
-
-    df = pd.DataFrame(
-        {
-            "Fecha": meses,
-            "Mes_Num": np.arange(1, n + 1),
-            "Ventas_Brutas": ventas,
-            "Costos_Gastos": costos,
-            "IVA_Cobrado": iva_cobrado,
-            "IVA_Pagado": iva_pagado,
-        }
+with col_l1:
+    st.markdown(
+        """
+        <div class="layer-card layer-1">
+            <h3>1️⃣ CAPA DE ENTRADA</h3>
+            <p style="font-size:0.85rem; color:#666;">Datos del negocio y transacciones</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-    df["Flujo_Neto"] = df["Ventas_Brutas"] - df["Costos_Gastos"]
-    return df
-
-
-df_historico = generar_datos_historicos()
-
-# --- ENTRENAMIENTO DE LA RED NEURONAL (Scikit-Learn MLPRegressor) ---
-@st.cache_resource
-def entrenar_modelo(df):
-    X = df[["Mes_Num", "Ventas_Brutas", "Costos_Gastos"]]
-    y = df[["Flujo_Neto", "IVA_Cobrado", "IVA_Pagado"]]
-
-    scaler_X = StandardScaler()
-    scaler_y = StandardScaler()
-
-    X_scaled = scaler_X.fit_transform(X)
-    y_scaled = scaler_y.fit_transform(y)
-
-    # Red Neuronal Multicapa (MLP)
-    mlp = MLPRegressor(
-        hidden_layer_sizes=(32, 16),
-        activation="relu",
-        solver="adam",
-        max_iter=1000,
-        random_state=42,
+    st.markdown("<br>", unsafe_allow_html=True)
+    ventas_mes = st.number_input(
+        "Ventas del Mes (USD sin IVA)", min_value=0.0, value=10000.0, step=500.0
     )
-    mlp.fit(X_scaled, y_scaled)
-
-    return mlp, scaler_X, scaler_y
-
-
-modelo, scaler_X, scaler_y = entrenar_modelo(df_historico)
-
-# --- PREDICCIÓN PARA LOS PRÓXIMOS 6 MESES ---
-ult_mes_num = df_historico["Mes_Num"].max()
-ult_ventas = df_historico["Ventas_Brutas"].iloc[-1]
-ult_costos = df_historico["Costos_Gastos"].iloc[-1]
-
-futuras_fechas = pd.date_range(
-    start=df_historico["Fecha"].iloc[-1] + pd.DateOffset(months=1),
-    periods=6,
-    freq="MS",
-)
-proyecciones = []
-
-curr_ventas = ult_ventas
-curr_costos = ult_costos
-
-for i, fecha in enumerate(futuras_fechas):
-    m_num = ult_mes_num + i + 1
-    # Aplicar factores simulados
-    curr_ventas *= 1 + (factor_crecimiento / 6)
-    curr_costos *= 1 + (inflacion_gastos / 6)
-
-    # Predicción con la Red Neuronal
-    X_pred = scaler_X.transform([[m_num, curr_ventas, curr_costos]])
-    y_pred_scaled = modelo.predict(X_pred)
-    y_pred = scaler_y.inverse_transform(y_pred_scaled)[0]
-
-    flujo_neto_pred = y_pred[0]
-    iva_cob_pred = y_pred[1]
-    iva_pag_pred = y_pred[2]
-
-    # Lógica Tributaria SRI Ecuador
-    iva_por_pagar = max(0, iva_cob_pred - iva_pag_pred)
-
-    # Cálculo Impuesto a la Renta estimado
-    utilidad_estimada = curr_ventas - curr_costos
-    if regimen_fiscal == "RIMPE Emprendedor":
-        # Tasa progresiva estimada sobre ingresos brutos o utilidad simplificada (ej. 1% a 2% sobre ingresos o tabla progresiva)
-        impuesto_renta = curr_ventas * 0.02
-    elif regimen_fiscal == "RIMPE Negocio Popular (Cuota Fija)":
-        impuesto_renta = 60.0 / 12  # Cuota anual fija prorrateada mensual
-    else:  # Régimen General
-        impuesto_renta = max(0, utilidad_estimada * 0.25)
-
-    proyecciones.append(
-        {
-            "Fecha": fecha,
-            "Ventas Proyectadas": curr_ventas,
-            "Costos Proyectados": curr_costos,
-            "Flujo Neto Proyectado": flujo_neto_pred,
-            "IVA a Pagar (SRI)": iva_por_pagar,
-            "Impuesto a la Renta Estimado": impuesto_renta,
-        }
+    compras_mes = st.number_input(
+        "Compras del Mes (USD sin IVA)", min_value=0.0, value=6000.0, step=500.0
+    )
+    tipo_tarifa = st.selectbox(
+        "Tarifa IVA Aplicable", [15.0, 5.0, 0.0], index=0
+    )
+    retenciones_recibidas = st.number_input(
+        "Retenciones Recibidas (IVA + Renta)",
+        min_value=0.0,
+        value=1290.0,
+        step=50.0,
+    )
+    ingresos_anual = st.number_input(
+        "Ingresos del Año (Proyectados)",
+        min_value=0.0,
+        value=200000.0,
+        step=5000.0,
+    )
+    costos_anual = st.number_input(
+        "Costos y Gastos Deducibles",
+        min_value=0.0,
+        value=160000.0,
+        step=5000.0,
     )
 
-df_proyeccion = pd.DataFrame(proyecciones)
-
-# --- DASHBOARD / INTERFAZ PRINCIPAL ---
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.metric(
-        label="Promedio Ingresos Mensuales (Proyectados)",
-        value=f"${df_proyeccion['Ventas Proyectadas'].mean():,.2f}",
-        delta=f"{factor_crecimiento*100:.1f}% simulación",
+with col_l2:
+    st.markdown(
+        """
+        <div class="layer-card layer-2">
+            <h3>2️⃣ CLASIFICACIÓN</h3>
+            <p style="font-size:0.85rem; color:#666;">Aplica la normativa legal</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
+    hecho_generador = st.checkbox("¿Hecho generador válido?", value=True)
+    comprobante_valido = st.checkbox(
+        "¿Comprobante autorizado por el SRI?", value=True
+    )
+    tipo_contribuyente = st.selectbox(
+        "Tipo de Contribuyente",
+        ["Sociedad / Persona Jurídica", "Persona Natural"],
+    )
+    st.info(
+        "⚖️ **Filtros de Ley:**\n- Art. 61 LORTI (Hecho Generador)\n- Art. 65 Tarifa General\n- Art. 55-56 Exoneraciones"
     )
 
-with col2:
-    st.metric(
-        label="IVA Promedio Mensual a Pagar (SRI 15%)",
-        value=f"${df_proyeccion['IVA a Pagar (SRI)'].mean():,.2f}",
+with col_l3:
+    st.markdown(
+        """
+        <div class="layer-card layer-3">
+            <h3>3️⃣ CAPA DE CÁLCULO</h3>
+            <p style="font-size:0.85rem; color:#666;">Operaciones y ponderación (Pesos)</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Neuronas de cálculo internas con pesos ponderados
+    iva_en_ventas = ventas_mes * (tipo_tarifa / 100.0)
+    credito_tributario = compras_mes * (tipo_tarifa / 100.0)
+    iva_retenido = retenciones_recibidas * 0.07  # proporción estimada
+    base_imponible_renta = max(0.0, ingresos_anual - costos_anual)
+    tarifa_renta_sociedad = 0.25 if "Sociedad" in tipo_contribuyente else 0.20
+    renta_retenida = 1200.0
+
+    st.markdown(
+        f"""
+        <div class="metric-box">
+        <b>IVA Ventas (×{tipo_tarifa/100}):</b><br>${iva_en_ventas:,.2f}
+        </div>
+        <div class="metric-box">
+        <b>Crédito Tributario:</b><br>${credito_tributario:,.2f}
+        </div>
+        <div class="metric-box">
+        <b>Base Imponible Renta:</b><br>${base_imponible_renta:,.2f}
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-with col3:
-    st.metric(
-        label="Renta Estimada Promedio / Mes",
-        value=f"${df_proyeccion['Impuesto a la Renta Estimado'].mean():,.2f}",
-        delta=regimen_fiscal,
+with col_l4:
+    st.markdown(
+        """
+        <div class="layer-card layer-4">
+            <h3>4️⃣ CAPA DE SALIDA</h3>
+            <p style="font-size:0.85rem; color:#666;">Resultado fiscal y plazos</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Resultados finales de la red
+    iva_pagar_calc = iva_en_ventas - crédito_tributario - iva_retenido
+    iva_a_pagar = max(0.0, iva_pagar_calc)
+    iva_a_favor = abs(min(0.0, iva_pagar_calc))
+
+    impuesto_causado_renta = base_imponible_renta * tarifa_renta_sociedad
+    renta_a_pagar = max(0.0, impuesto_causado_renta - renta_retenida)
+
+    st.markdown(
+        f"""
+        <div class="metric-box" style="border-left: 4px solid #d62728;">
+        <b>IVA A PAGAR:</b><br><span style="color:red; font-size:1.2rem;"><b>${iva_a_pagar:,.2f}</b></span>
+        </div>
+        <div class="metric-box" style="border-left: 4px solid #2ca02c;">
+        <b>CRÉDITO A FAVOR:</b><br><span style="color:green; font-size:1.2rem;"><b>${iva_a_favor:,.2f}</b></span>
+        </div>
+        <div class="metric-box" style="border-left: 4px solid #d62728;">
+        <b>RENTA A PAGAR:</b><br><span style="color:red; font-size:1.2rem;"><b>${renta_a_pagar:,.2f}</b></span>
+        </div>
+        <div class="metric-box">
+        <b>PLAZO DE DECLARACIÓN:</b><br>Día 14 <span style="font-size:0.8rem;">(9.° dígito RUC)</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 st.markdown("---")
 
-# Gráficos Interactivos con Plotly
-st.subheader("📈 Proyección de Flujo de Caja Neto (Histórico vs IA)")
+# --- RESUMEN DE ECUACIONES Y MATRIZ DE PONDERACIÓN ---
+st.subheader("📋 Matriz de Ecuaciones y Trazabilidad Neuronal (SRI)")
+col_eq1, col_eq2 = st.columns(2)
 
-fig_flujo = go.Figure()
-fig_flujo.add_trace(
-    go.Scatter(
-        x=df_historico["Fecha"],
-        y=df_historico["Flujo_Neto"],
-        name="Histórico Real",
-        line=dict(color="#1f77b4", width=2),
+with col_eq1:
+    st.markdown(
+        f"""
+    **Flujo del IVA:**
+    * $\\text{{IVA Ventas}} = \\text{{Ventas}} \\times {tipo_tarifa\\%}} = \\${iva_en_ventas:,.2f}$
+    * $\\text{{IVA a Pagar}} = \\text{{IVA Ventas}} - \\text{{Crédito Tributario}} - \\text{{IVA Retenido}} = \\mathbf{{\\${iva_a_pagar:,.2f}}}$
+    """
     )
-)
-fig_flujo.add_trace(
-    go.Scatter(
-        x=df_proyeccion["Fecha"],
-        y=df_proyeccion["Flujo Neto Proyectado"],
-        name="Proyección Red Neuronal (MLP)",
-        line=dict(color="#2ca02c", width=3, dash="dash"),
+
+with col_eq2:
+    st.markdown(
+        f"""
+    **Flujo del Impuesto a la Renta:**
+    * $\\text{{Base Imponible}} = \\text{{Ingresos}} - \\text{{Costos}} = \\${base_imponible_renta:,.2f}$
+    * $\\text{{Renta a Pagar}} = (\\text{{Base}} \\times {tarifa_renta_sociedad*100}\\%) - \\text{{Retenciones}} = \\mathbf{{\\${renta_a_pagar:,.2f}}}$
+    """
     )
-)
-fig_flujo.update_layout(
-    xaxis_title="Fecha",
-    yaxis_title="USD ($)",
-    hovermode="x unified",
-    template="plotly_white",
-)
-st.plotly_chart(fig_flujo, use_container_width=True)
-
-# Sección de Obligaciones Tributarias
-st.subheader("🧾 Obligaciones Tributarias Proyectadas (IVA & Impuesto a la Renta)")
-
-col_g1, col_g2 = st.columns(2)
-
-with col_g1:
-    fig_iva = px.bar(
-        df_proyeccion,
-        x="Fecha",
-        y="IVA a Pagar (SRI)",
-        title="IVA Neto a Declarar por Mes (15%)",
-        color_discrete_sequence=["#ff7f0e"],
-    )
-    fig_iva.update_layout(template="plotly_white")
-    st.plotly_chart(fig_iva, use_container_width=True)
-
-with col_g2:
-    fig_renta = px.bar(
-        df_proyeccion,
-        x="Fecha",
-        y="Impuesto a la Renta Estimado",
-        title=f"Proyección Impuesto a la Renta ({regimen_fiscal})",
-        color_discrete_sequence=["#d62728"],
-    )
-    fig_renta.update_layout(template="plotly_white")
-    st.plotly_chart(fig_renta, use_container_width=True)
-
-# Tabla de Datos Detallados
-with st.expander("🔍 Ver Detalle Numérico de Proyecciones"):
-    df_display = df_proyeccion.copy()
-    for col in df_display.columns[1:]:
-        df_display[col] = df_display[col].apply(lambda x: f"${x:,.2f}")
-    st.dataframe(df_display, use_container_width=True)
 
 st.markdown("---")
 st.markdown(
-    f"<p style='text-align: center; color: gray;'>Plataforma Tributaria Inteligente • Desarrollado por {DEVELOPER_NAME}</p>",
+    f"<p style='text-align: center; color: gray;'>Red Neuronal Interactiva • Desarrollado por {DEVELOPER_NAME}</p>",
     unsafe_allow_html=True,
 )
+    
+    
