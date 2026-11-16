@@ -30,11 +30,13 @@ st.markdown(
 )
 
 st.markdown(
-    '<p class="main-title">🧠 Red Neuronal del IVA y del Impuesto a la Renta</p>',
+    '<p class="main-title">🧠 Red Neuronal del IVA y del Impuesto a la'
+    " Renta</p>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    f'<p class="sub-title">Modelo Predictivo e Interactivo Basado en el SRI y LORTI • Desarrollado por <b>{DEVELOPER_NAME}</b></p>',
+    f'<p class="sub-title">Modelo Predictivo e Interactivo Basado en el SRI y'
+    f' LORTI • Desarrollado por <b>{DEVELOPER_NAME}</b></p>',
     unsafe_allow_html=True,
 )
 
@@ -100,7 +102,8 @@ with col_l2:
         ["Sociedad / Persona Jurídica", "Persona Natural"],
     )
     st.info(
-        "⚖️ **Filtros de Ley:**\n- Art. 61 LORTI (Hecho Generador)\n- Art. 65 Tarifa General\n- Art. 55-56 Exoneraciones"
+        "⚖️ **Filtros de Ley:**\n- Art. 61 LORTI (Hecho Generador)\n- Art. 65"
+        " Tarifa General\n- Art. 55-56 Exoneraciones"
     )
 
 with col_l3:
@@ -151,7 +154,7 @@ with col_l4:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # Resultados finales de la red
-    iva_pagar_calc = iva_en_ventas - crédito_tributario - iva_retenido
+    iva_pagar_calc = iva_en_ventas - credito_tributario - iva_retenido
     iva_a_pagar = max(0.0, iva_pagar_calc)
     iva_a_favor = abs(min(0.0, iva_pagar_calc))
 
@@ -161,16 +164,20 @@ with col_l4:
     st.markdown(
         f"""
         <div class="metric-box" style="border-left: 4px solid #d62728;">
-        <b>IVA A PAGAR:</b><br><span style="color:red; font-size:1.2rem;"><b>${iva_a_pagar:,.2f}</b></span>
+        <b>IVA A PAGAR:</b><br><span style="color:red;"
+        ><b>${iva_a_pagar:,.2f}</b></span>
         </div>
         <div class="metric-box" style="border-left: 4px solid #2ca02c;">
-        <b>CRÉDITO A FAVOR:</b><br><span style="color:green; font-size:1.2rem;"><b>${iva_a_favor:,.2f}</b></span>
+        <b>CRÉDITO A FAVOR:</b><br><span style="color:green;"
+        ><b>${iva_a_favor:,.2f}</b></span>
         </div>
         <div class="metric-box" style="border-left: 4px solid #d62728;">
-        <b>RENTA A PAGAR:</b><br><span style="color:red; font-size:1.2rem;"><b>${renta_a_pagar:,.2f}</b></span>
+        <b>RENTA A PAGAR:</b><br><span style="color:red;"
+        ><b>${renta_a_pagar:,.2f}</b></span>
         </div>
         <div class="metric-box">
-        <b>PLAZO DE DECLARACIÓN:</b><br>Día 14 <span style="font-size:0.8rem;">(9.° dígito RUC)</span>
+        <b>PLAZO DE DECLARACIÓN:</b><br>Día 14 <span
+        style="font-size:0.8rem;">(9.° dígito RUC)</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -186,8 +193,8 @@ with col_eq1:
     st.markdown(
         f"""
     **Flujo del IVA:**
-    * $\\text{{IVA Ventas}} = \\text{{Ventas}} \\times {tipo_tarifa\\%}} = \\${iva_en_ventas:,.2f}$
-    * $\\text{{IVA a Pagar}} = \\text{{IVA Ventas}} - \\text{{Crédito Tributario}} - \\text{{IVA Retenido}} = \\mathbf{{\\${iva_a_pagar:,.2f}}}$
+    * **IVA Ventas:** Ventas × {tipo_tarifa}% = **${iva_en_ventas:,.2f}**
+    * **IVA a Pagar:** IVA Ventas - Crédito Tributario - IVA Retenido = **${iva_a_pagar:,.2f}**
     """
     )
 
@@ -195,15 +202,15 @@ with col_eq2:
     st.markdown(
         f"""
     **Flujo del Impuesto a la Renta:**
-    * $\\text{{Base Imponible}} = \\text{{Ingresos}} - \\text{{Costos}} = \\${base_imponible_renta:,.2f}$
-    * $\\text{{Renta a Pagar}} = (\\text{{Base}} \\times {tarifa_renta_sociedad*100}\\%) - \\text{{Retenciones}} = \\mathbf{{\\${renta_a_pagar:,.2f}}}$
+    * **Base Imponible:** Ingresos - Costos = **${base_imponible_renta:,.2f}**
+    * **Renta a Pagar:** (Base × {int(tarifa_renta_sociedad*100)}%) - Retenciones ="
+    " **${renta_a_pagar:,.2f}**
     """
     )
 
 st.markdown("---")
 st.markdown(
-    f"<p style='text-align: center; color: gray;'>Red Neuronal Interactiva • Desarrollado por {DEVELOPER_NAME}</p>",
+    f"<p style='text-align: center; color: gray;'>Red Neuronal Interactiva •"
+    f" Desarrollado por {DEVELOPER_NAME}</p>",
     unsafe_allow_html=True,
 )
-    
-    
