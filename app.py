@@ -11,21 +11,13 @@ st.set_page_config(
 # --- CRÉDITO OBLIGATORIO ---
 DEVELOPER_NAME = "Jonathan Toasa"
 
-# Estilos CSS avanzados para replicar el diseño de la red neuronal de 4 capas
+# Estilos CSS
 st.markdown(
     """
     <style>
     .main-title { font-size: 2.2rem; color: #ffffff; font-weight: 800; text-align: center; margin-bottom: 0px; }
     .sub-title { font-size: 1rem; color: #b0b0b0; text-align: center; margin-bottom: 25px; }
-    
-    .layer-box { border-radius: 12px; padding: 15px; margin-bottom: 15px; color: white; }
-    .layer-1 { background-color: #1a365d; border-left: 6px solid #3182ce; }
-    .layer-2 { background-color: #44337a; border-left: 6px solid #805ad5; }
-    .layer-3 { background-color: #1c4532; border-left: 6px solid #38a169; }
-    .layer-4 { background-color: #581c1c; border-left: 6px solid #e53e3e; }
-    
-    .neuron { background: rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px; margin: 8px 0; border: 1px solid rgba(255,255,255,0.15); }
-    .badge-val { background-color: #ecc94b; color: #1a202c; font-weight: bold; padding: 2px 8px; border-radius: 12px; float: right; font-size: 0.85rem; }
+    .stMetric { background-color: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 """,
     unsafe_allow_html=True,
@@ -117,45 +109,43 @@ renta_a_pagar = max(
     0.0, impuesto_causado_renta - (retenciones_recibidas * 0.9)
 )
 
-# --- VISTA PRINCIPAL: 4 CAPAS NEURONALES ---
+# --- VISTA PRINCIPAL: 4 CAPAS NEURONALES EN COLUMNAS ---
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
-    st.markdown(
-        f"""
-        <div class="layer-box layer-1">
-            <h4>1️⃣ CAPA DE ENTRADA</h4>
-            <p style="font-size:0.8rem; color:#cbd5e0;">Datos del negocio</p>
-            
-            <div class="neuron">
-                <b>VENTAS DEL MES</b><br><span style="font-size:0.75rem;">valor sin IVA</span>
-                <span class="badge-val">${ventas_mes:,.0f}</span>
-            </div>
-            <div class="neuron">
-                <b>COMPRAS DEL MES</b><br><span style="font-size:0.75rem;">valor sin IVA</span>
-                <span class="badge-val">${compras_mes:,.0f}</span>
-            </div>
-            <div class="neuron">
-                <b>TARIFA APLICABLE</b><br><span style="font-size:0.75rem;">tipo de bien/servicio</span>
-                <span class="badge-val">{tipo_tarifa}%</span>
-            </div>
-            <div class="neuron">
-                <b>RETENCIONES</b><br><span style="font-size:0.75rem;">IVA y renta retenida</span>
-                <span class="badge-val">${retenciones_recibidas:,.0f}</span>
-            </div>
-            <div class="neuron">
-                <b>INGRESOS AÑO</b><br><span style="font-size:0.75rem;">gravados del ejercicio</span>
-                <span class="badge-val">${ingresos_anual:,.0f}</span>
-            </div>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
+    st.info("### 1️⃣ CAPA DE ENTRADA\n*Datos del negocio*")
+    st.metric("Ventas del Mes", f"${ventas_mes:,.2f}")
+    st.metric("Compras del Mes", f"${compras_mes:,.2f}")
+    st.metric("Tarifa Aplicable", f"{tipo_tarifa}%")
+    st.metric("Retenciones", f"${retenciones_recibidas:,.2f}")
+    st.metric("Ingresos Año", f"${ingresos_anual:,.2f}")
 
 with c2:
-    cond_text = "NO" if tipo_tarifa > 0 else "SÍ"
-    st.markdown(
-        f"""
-        <div class="layer-box layer-2">
-            <h4>2️⃣ CLASIFICACIÓN</h4>
-            <p style="font-size:0.8rem; color:#e2e8f0;">A
+    st.warning("### 2️⃣ CLASIFICACIÓN\n*Aplica la ley*")
+    st.metric("Hecho Generador", "SÍ (Art. 61)")
+    st.metric("Tarifa IVA", f"{tipo_tarifa}% (Art. 65)")
+    st.metric("Exoneración 0%", "SÍ" if tipo_tarifa == 0 else "NO")
+    st.metric("Comprobante", "Válido (SRI)")
+    st.metric("Contribuyente", "Sociedad / Jurídica")
+
+with c3:
+    st.success("### 3️⃣ CAPA DE CÁLCULO\n*Opera con pesos*")
+    st.metric("IVA en Ventas", f"${iva_en_ventas:,.2f}")
+    st.metric("Crédito Tributario", f"${credito_tributario:,.2f}")
+    st.metric("IVA Retenido", f"${iva_retenido:,.2f}")
+    st.metric("Base Imponible Renta", f"${base_imponible_renta:,.2f}")
+
+with c4:
+    st.error("### 4️⃣ CAPA DE SALIDA\n*Resultado fiscal*")
+    st.metric("IVA A PAGAR", f"${iva_a_pagar:,.2f}")
+    st.metric("Crédito a Favor", f"${iva_a_favor:,.2f}")
+    st.metric("Renta a Pagar", f"${renta_a_pagar:,.2f}")
+    st.metric("Plazo Declaración", "Día 14 (9.° RUC)")
+
+st.markdown("---")
+st.markdown(
+    f"<p style='text-align: center; color: gray; font-size: 0.85rem;'>Modelo"
+    f" educativo basado en LORTI y SRI (2026) • Desarrollado por"
+    f" {DEVELOPER_NAME}</p>",
+    unsafe_allow_html=True,
+)
