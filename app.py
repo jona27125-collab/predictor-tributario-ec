@@ -1,10 +1,9 @@
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Red Neuronal Tributaria - Ecuador 🇪🇨",
+    page_title="Red Neuronal del IVA y del Impuesto a la Renta",
     page_icon="🧠",
     layout="wide",
 )
@@ -12,205 +11,173 @@ st.set_page_config(
 # --- CRÉDITO OBLIGATORIO ---
 DEVELOPER_NAME = "Jonathan Toasa"
 
-# Estilos CSS personalizados para simular las 4 capas de la red neuronal
+# Estilos CSS avanzados para replicar el diseño de la red neuronal de 4 capas
 st.markdown(
     """
     <style>
-    .main-title { font-size: 2.2rem; color: #1f77b4; font-weight: 800; text-align: center; }
-    .sub-title { font-size: 1.1rem; color: #555; text-align: center; margin-bottom: 30px; }
-    .layer-card { background-color: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; height: 100%; }
-    .layer-1 { border-top: 5px solid #1f77b4; }
-    .layer-2 { border-top: 5px solid #9467bd; }
-    .layer-3 { border-top: 5px solid #2ca02c; }
-    .layer-4 { border-top: 5px solid #d62728; }
-    .metric-box { background-color: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; text-align: center; margin-bottom: 10px; }
+    .main-title { font-size: 2.2rem; color: #ffffff; font-weight: 800; text-align: center; margin-bottom: 0px; }
+    .sub-title { font-size: 1rem; color: #b0b0b0; text-align: center; margin-bottom: 25px; }
+    
+    /* Contenedores de Capas */
+    .layer-box { border-radius: 12px; padding: 15px; margin-bottom: 15px; color: white; }
+    .layer-1 { background-color: #1a365d; border-left: 6px solid #3182ce; }
+    .layer-2 { background-color: #44337a; border-left: 6px solid #805ad5; }
+    .layer-3 { background-color: #1c4532; border-left: 6px solid #38a169; }
+    .layer-4 { background-color: #581c1c; border-left: 6px solid #e53e3e; }
+    
+    /* Nodos Neuronales Estilizados */
+    .neuron { background: rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px; margin: 8px 0; border: 1px solid rgba(255,255,255,0.15); }
+    .badge-val { background-color: #ecc94b; color: #1a202c; font-weight: bold; padding: 2px 8px; border-radius: 12px; float: right; font-size: 0.85rem; }
+    
+    /* Panel lateral de casos */
+    .stButton>button { width: 100%; border-radius: 8px; font-weight: 600; }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
+# Título Principal
 st.markdown(
-    '<p class="main-title">🧠 Red Neuronal del IVA y del Impuesto a la'
-    " Renta</p>",
+    '<p class="main-title">🧠 Red Neuronal del IVA y del Impuesto a la Renta</p>',
     unsafe_allow_html=True,
 )
 st.markdown(
-    f'<p class="sub-title">Modelo Predictivo e Interactivo Basado en el SRI y'
-    f' LORTI • Desarrollado por <b>{DEVELOPER_NAME}</b></p>',
+    f'<p class="sub-title">Práctico-experimental • Modelo Predictivo Interactivo (SRI & LORTI) • Desarrollado por <b>{DEVELOPER_NAME}</b></p>',
     unsafe_allow_html=True,
 )
 
-# --- DISTRIBUCIÓN EN 4 CAPAS (ESTILO ARQUITECTURA NEURONAL) ---
-col_l1, col_l2, col_l3, col_l4 = st.columns(4)
-
-with col_l1:
-    st.markdown(
-        """
-        <div class="layer-card layer-1">
-            <h3>1️⃣ CAPA DE ENTRADA</h3>
-            <p style="font-size:0.85rem; color:#666;">Datos del negocio y transacciones</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("<br>", unsafe_allow_html=True)
-    ventas_mes = st.number_input(
-        "Ventas del Mes (USD sin IVA)", min_value=0.0, value=10000.0, step=500.0
-    )
-    compras_mes = st.number_input(
-        "Compras del Mes (USD sin IVA)", min_value=0.0, value=6000.0, step=500.0
-    )
-    tipo_tarifa = st.selectbox(
-        "Tarifa IVA Aplicable", [15.0, 5.0, 0.0], index=0
-    )
-    retenciones_recibidas = st.number_input(
-        "Retenciones Recibidas (IVA + Renta)",
-        min_value=0.0,
-        value=1290.0,
-        step=50.0,
-    )
-    ingresos_anual = st.number_input(
-        "Ingresos del Año (Proyectados)",
-        min_value=0.0,
-        value=200000.0,
-        step=5000.0,
-    )
-    costos_anual = st.number_input(
-        "Costos y Gastos Deducibles",
-        min_value=0.0,
-        value=160000.0,
-        step=5000.0,
-    )
-
-with col_l2:
-    st.markdown(
-        """
-        <div class="layer-card layer-2">
-            <h3>2️⃣ CLASIFICACIÓN</h3>
-            <p style="font-size:0.85rem; color:#666;">Aplica la normativa legal</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("<br>", unsafe_allow_html=True)
-    hecho_generador = st.checkbox("¿Hecho generador válido?", value=True)
-    comprobante_valido = st.checkbox(
-        "¿Comprobante autorizado por el SRI?", value=True
-    )
-    tipo_contribuyente = st.selectbox(
-        "Tipo de Contribuyente",
-        ["Sociedad / Persona Jurídica", "Persona Natural"],
-    )
-    st.info(
-        "⚖️ **Filtros de Ley:**\n- Art. 61 LORTI (Hecho Generador)\n- Art. 65"
-        " Tarifa General\n- Art. 55-56 Exoneraciones"
-    )
-
-with col_l3:
-    st.markdown(
-        """
-        <div class="layer-card layer-3">
-            <h3>3️⃣ CAPA DE CÁLCULO</h3>
-            <p style="font-size:0.85rem; color:#666;">Operaciones y ponderación (Pesos)</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Neuronas de cálculo internas con pesos ponderados
-    iva_en_ventas = ventas_mes * (tipo_tarifa / 100.0)
-    credito_tributario = compras_mes * (tipo_tarifa / 100.0)
-    iva_retenido = retenciones_recibidas * 0.07  # proporción estimada
-    base_imponible_renta = max(0.0, ingresos_anual - costos_anual)
-    tarifa_renta_sociedad = 0.25 if "Sociedad" in tipo_contribuyente else 0.20
-    renta_retenida = 1200.0
-
-    st.markdown(
-        f"""
-        <div class="metric-box">
-        <b>IVA Ventas (×{tipo_tarifa/100}):</b><br>${iva_en_ventas:,.2f}
-        </div>
-        <div class="metric-box">
-        <b>Crédito Tributario:</b><br>${credito_tributario:,.2f}
-        </div>
-        <div class="metric-box">
-        <b>Base Imponible Renta:</b><br>${base_imponible_renta:,.2f}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with col_l4:
-    st.markdown(
-        """
-        <div class="layer-card layer-4">
-            <h3>4️⃣ CAPA DE SALIDA</h3>
-            <p style="font-size:0.85rem; color:#666;">Resultado fiscal y plazos</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Resultados finales de la red
-    iva_pagar_calc = iva_en_ventas - credito_tributario - iva_retenido
-    iva_a_pagar = max(0.0, iva_pagar_calc)
-    iva_a_favor = abs(min(0.0, iva_pagar_calc))
-
-    impuesto_causado_renta = base_imponible_renta * tarifa_renta_sociedad
-    renta_a_pagar = max(0.0, impuesto_causado_renta - renta_retenida)
-
-    st.markdown(
-        f"""
-        <div class="metric-box" style="border-left: 4px solid #d62728;">
-        <b>IVA A PAGAR:</b><br><span style="color:red;"
-        ><b>${iva_a_pagar:,.2f}</b></span>
-        </div>
-        <div class="metric-box" style="border-left: 4px solid #2ca02c;">
-        <b>CRÉDITO A FAVOR:</b><br><span style="color:green;"
-        ><b>${iva_a_favor:,.2f}</b></span>
-        </div>
-        <div class="metric-box" style="border-left: 4px solid #d62728;">
-        <b>RENTA A PAGAR:</b><br><span style="color:red;"
-        ><b>${renta_a_pagar:,.2f}</b></span>
-        </div>
-        <div class="metric-box">
-        <b>PLAZO DE DECLARACIÓN:</b><br>Día 14 <span
-        style="font-size:0.8rem;">(9.° dígito RUC)</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-st.markdown("---")
-
-# --- RESUMEN DE ECUACIONES Y MATRIZ DE PONDERACIÓN ---
-st.subheader("📋 Matriz de Ecuaciones y Trazabilidad Neuronal (SRI)")
-col_eq1, col_eq2 = st.columns(2)
-
-with col_eq1:
-    st.markdown(
-        f"""
-    **Flujo del IVA:**
-    * **IVA Ventas:** Ventas × {tipo_tarifa}% = **${iva_en_ventas:,.2f}**
-    * **IVA a Pagar:** IVA Ventas - Crédito Tributario - IVA Retenido = **${iva_a_pagar:,.2f}**
-    """
-    )
-
-with col_eq2:
-    st.markdown(
-        f"""
-    **Flujo del Impuesto a la Renta:**
-    * **Base Imponible:** Ingresos - Costos = **${base_imponible_renta:,.2f}**
-    * **Renta a Pagar:** (Base × {int(tarifa_renta_sociedad*100)}%) - Retenciones ="
-    " **${renta_a_pagar:,.2f}**
-    """
-    )
-
-st.markdown("---")
-st.markdown(
-    f"<p style='text-align: center; color: gray;'>Red Neuronal Interactiva •"
-    f" Desarrollado por {DEVELOPER_NAME}</p>",
-    unsafe_allow_html=True,
+# --- PANEL DE CONTROL LATERAL (CASOS Y ENTRADAS) ---
+st.sidebar.markdown("### ⚙️ Casos de Ejemplo y Controles")
+caso = st.sidebar.selectbox(
+    "Seleccionar Escenario:",
+    [
+        "Comercial Los Andes S.A. (Caso Base)",
+        "Tienda Tarifa 0% / Crédito a Favor",
+        "Persona Natural Servicios Profesionales",
+    ],
 )
+
+# Definir valores según el caso
+if "Los Andes" in caso:
+    v_def, c_def, t_def, ret_def, ing_def, cos_def = (
+        10000.0,
+        6000.0,
+        15.0,
+        1290.0,
+        200000.0,
+        160000.0,
+    )
+elif "0%" in caso:
+    v_def, c_def, t_def, ret_def, ing_def, cos_def = (
+        5000.0,
+        8000.0,
+        0.0,
+        200.0,
+        80000.0,
+        70000.0,
+    )
+else:
+    v_def, c_def, t_def, ret_def, ing_def, cos_def = (
+        15000.0,
+        2000.0,
+        15.0,
+        1500.0,
+        120000.0,
+        40000.0,
+    )
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("#### 📥 Parámetros de Entrada")
+ventas_mes = st.sidebar.number_input(
+    "Ventas del Mes (USD sin IVA)", value=v_def, step=500.0
+)
+compras_mes = st.sidebar.number_input(
+    "Compras del Mes (USD sin IVA)", value=c_def, step=500.0
+)
+tipo_tarifa = st.sidebar.selectbox(
+    "Tarifa IVA Aplicable", [15.0, 5.0, 0.0], index=0 if t_def == 15.0 else 2
+)
+retenciones_recibidas = st.sidebar.number_input(
+    "Retenciones Recibidas (Total)", value=ret_def, step=50.0
+)
+ingresos_anual = st.sidebar.number_input(
+    "Ingresos del Año", value=ing_def, step=5000.0
+)
+costos_anual = st.sidebar.number_input(
+    "Costos y Gastos Deducibles", value=cos_def, step=5000.0
+)
+
+# --- CÁLCULOS MATEMÁTICOS DE LA RED ---
+iva_en_ventas = ventas_mes * (tipo_tarifa / 100.0)
+credito_tributario = compras_mes * (tipo_tarifa / 100.0)
+iva_retenido = retenciones_recibidas * 0.07  # proporción ponderada
+iva_pagar_calc = iva_en_ventas - credito_tributario - iva_retenido
+iva_a_pagar = max(0.0, iva_pagar_calc)
+iva_a_favor = abs(min(0.0, iva_pagar_calc))
+
+base_imponible_renta = max(0.0, ingresos_anual - costos_anual)
+impuesto_causado_renta = base_imponible_renta * 0.25
+renta_a_pagar = max(
+    0.0, impuesto_causado_renta - (retenciones_recibidas * 0.9)
+)
+
+# --- VISTA PRINCIPAL: 4 CAPAS NEURONALES EN COLUMNAS ---
+c1, c2, c3, c4 = st.columns(4)
+
+# CAPA 1: ENTRADA
+with c1:
+    st.markdown(
+        """
+        <div class="layer-box layer-1">
+            <h4>1️⃣ CAPA DE ENTRADA</h4>
+            <p style="font-size:0.8rem; color:#cbd5e0;">Datos del negocio</p>
+            
+            <div class="neuron">
+                <b>VENTAS DEL MES</b><br><span style="font-size:0.75rem;">valor sin IVA</span>
+                <span class="badge-val">%{v:,.0f}</span>
+            </div>
+            <div class="neuron">
+                <b>COMPRAS DEL MES</b><br><span style="font-size:0.75rem;">valor sin IVA</span>
+                <span class="badge-val">%{c:,.0f}</span>
+            </div>
+            <div class="neuron">
+                <b>TARIFA APLICABLE</b><br><span style="font-size:0.75rem;">tipo de bien/servicio</span>
+                <span class="badge-val">%{t}%</span>
+            </div>
+            <div class="neuron">
+                <b>RETENCIONES</b><br><span style="font-size:0.75rem;">IVA y renta retenida</span>
+                <span class="badge-val">%{r:,.0f}</span>
+            </div>
+            <div class="neuron">
+                <b>INGRESOS AÑO</b><br><span style="font-size:0.75rem;">gravados del ejercicio</span>
+                <span class="badge-val">%{i:,.0f}</span>
+            </div>
+        </div>
+    """.format(
+            v=ventas_mes,
+            c=compras_mes,
+            t=tipo_tarifa,
+            r=retenciones_recibidas,
+            i=ingresos_anual,
+        ),
+        unsafe_allow_html=True,
+    )
+
+# CAPA 2: CLASIFICACIÓN
+with c2:
+    st.markdown(
+        """
+        <div class="layer-box layer-2">
+            <h4>2️⃣ CLASIFICACIÓN</h4>
+            <p style="font-size:0.8rem; color:#e2e8f0;">Aplica la ley</p>
+            
+            <div class="neuron">
+                <b>HECHO GENERADOR</b><br><span style="font-size:0.75rem;">Art. 61 LORTI</span>
+                <span class="badge-val" style="background:#48bb78; color:white;">SÍ</span>
+            </div>
+            <div class="neuron">
+                <b>TARIFA DE IVA</b><br><span style="font-size:0.75rem;">Art. 65 General</span>
+                <span class="badge-val">%{t}%</span>
+            </div>
+            <div class="neuron">
+                <b>EXONERACIÓN / 0%</b><br><span style="font-size:0.75rem
