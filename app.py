@@ -92,6 +92,8 @@ if "ventas_mes" not in st.session_state:
     st.session_state.ventas_mes = 10000.0
 if "compras_mes" not in st.session_state:
     st.session_state.compras_mes = 6000.0
+if "iva_compras_pagado" not in st.session_state:
+    st.session_state.iva_compras_pagado = 900.0
 if "tipo_tarifa" not in st.session_state:
     st.session_state.tipo_tarifa = 15.0
 if "retenciones_recibidas" not in st.session_state:
@@ -103,13 +105,14 @@ if "costos_anual" not in st.session_state:
 
 ventas_mes = st.session_state.ventas_mes
 compras_mes = st.session_state.compras_mes
+iva_compras_pagado = st.session_state.iva_compras_pagado
 tipo_tarifa = st.session_state.tipo_tarifa
 retenciones_recibidas = st.session_state.retenciones_recibidas
 ingresos_anual = st.session_state.ingresos_anual
 costos_anual = st.session_state.costos_anual
 
 iva_en_ventas = ventas_mes * (tipo_tarifa / 100.0)
-credito_tributario = compras_mes * (tipo_tarifa / 100.0)
+credito_tributario = iva_compras_pagado
 iva_retenido = retenciones_recibidas * 0.07
 iva_pagar_calc = iva_en_ventas - credito_tributario - iva_retenido
 iva_a_pagar = max(0.0, iva_pagar_calc)
@@ -127,7 +130,7 @@ def esc(value):
 
 # Distribución visual inspirada en la referencia: cuatro columnas de proceso,
 # dos recorridos (IVA e IR) y la LRTI como núcleo central de la red.
-W, H = 1400, 720
+W, H = 1400, 760
 
 def text_svg(x, y, value, size=13, color="#eaf0ff", weight=600):
     return (f'<text x="{x}" y="{y}" text-anchor="middle" '
@@ -150,21 +153,30 @@ def node_svg(node_id, x, y, title, value, color, heading, detail):
     </g>'''
 
 node_specs = [
-    ("iva_in", 145, 255, "VENTAS", money(ventas_mes), "#438cff", "Entrada IVA", "Ventas del mes antes de IVA, usadas como referencia para calcular el impuesto generado."),
-    ("iva_analysis", 500, 255, "TARIFA", f"{tipo_tarifa:g}%", "#b46cff", "Análisis IVA", "La tarifa seleccionada se aplica a la base imponible de las operaciones gravadas. La LRTI determina los casos de tarifa 0% y tarifas diferenciadas."),
-    ("iva_process", 855, 255, "IVA VENTAS", money(iva_en_ventas), "#12c8b5", "Procesamiento IVA", f"IVA generado estimado: {money(iva_en_ventas)}. Crédito tributario estimado: {money(credito_tributario)}."),
-    ("iva_result", 1210, 255, "A PAGAR", money(iva_a_pagar), "#ff9b50", "Resultado IVA", f"IVA estimado a pagar: {money(iva_a_pagar)}. Saldo a favor estimado: {money(iva_a_favor)}."),
-    ("ir_in", 145, 535, "INGRESOS", money(ingresos_anual), "#438cff", "Entrada IR", "Ingresos anuales y costos o gastos deducibles declarados para el ejercicio fiscal."),
-    ("ir_analysis", 500, 535, "BASE", money(base_imponible_renta), "#b46cff", "Análisis IR", "La base imponible se obtiene depurando los ingresos gravados con los costos, gastos y deducciones permitidos por la LRTI."),
-    ("ir_process", 855, 535, "IMPUESTO", money(impuesto_causado_renta), "#12c8b5", "Procesamiento IR", f"Impuesto causado estimado con tarifa referencial del 25%: {money(impuesto_causado_renta)}."),
-    ("ir_result", 1210, 535, "A PAGAR", money(renta_a_pagar), "#ff9b50", "Resultado IR", f"Impuesto a la Renta estimado por pagar: {money(renta_a_pagar)}."),
+    ("iva_in", 145, 220, "VENTAS", money(ventas_mes), "#438cff", "Entrada IVA · Ventas", "Ventas del mes antes de IVA, usadas como referencia para calcular el impuesto generado."),
+    ("iva_purchases", 145, 390, "IVA COMPRAS", money(iva_compras_pagado), "#438cff", "IVA pagado en compras", "Valor del IVA pagado en adquisiciones. Se ingresa por separado para reflejar facturas con distintas tarifas y el crédito tributario que efectivamente corresponda."),
+    ("iva_analysis", 500, 305, "TARIFA", f"{tipo_tarifa:g}%", "#b46cff", "Análisis IVA", "La tarifa seleccionada se aplica a las ventas gravadas. El IVA pagado en compras se registra separadamente y puede constituir crédito tributario si cumple los requisitos legales."),
+    ("iva_process", 855, 305, "IVA VENTAS", money(iva_en_ventas), "#12c8b5", "Procesamiento IVA", f"IVA generado estimado: {money(iva_en_ventas)}. Crédito tributario estimado: {money(credito_tributario)}."),
+    ("iva_result", 1210, 305, "A PAGAR", money(iva_a_pagar), "#ff9b50", "Resultado IVA", f"IVA estimado a pagar: {money(iva_a_pagar)}. Saldo a favor estimado: {money(iva_a_favor)}."),
+    ("ir_in", 145, 570, "INGRESOS", money(ingresos_anual), "#438cff", "Entrada IR", "Ingresos anuales y costos o gastos deducibles declarados para el ejercicio fiscal."),
+    ("ir_analysis", 500, 570, "BASE", money(base_imponible_renta), "#b46cff", "Análisis IR", "La base imponible se obtiene depurando los ingresos gravados con los costos, gastos y deducciones permitidos por la LRTI."),
+    ("ir_process", 855, 570, "IMPUESTO", money(impuesto_causado_renta), "#12c8b5", "Procesamiento IR", f"Impuesto causado estimado con tarifa referencial del 25%: {money(impuesto_causado_renta)}."),
+    ("ir_result", 1210, 570, "A PAGAR", money(renta_a_pagar), "#ff9b50", "Resultado IR", f"Impuesto a la Renta estimado por pagar: {money(renta_a_pagar)}."),
 ]
 
 svg = [f'''
-<div id="neural-wrap" style="width:100%;overflow-x:auto;border:1px solid #233653;
+<div id="neural-wrap" style="width:100%;overflow:hidden;border:1px solid #233653;
      border-radius:22px;background:#0b1528;box-shadow:0 18px 55px rgba(0,0,0,.25)">
+<div class="zoom-toolbar" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#101d33;border-bottom:1px solid #263958">
+ <span style="color:#aebddb;font:700 12px Inter,Segoe UI,Arial">ZOOM DEL GRÁFICO</span>
+ <button type="button" class="zoom-btn" data-zoom="in" aria-label="Acercar">＋</button>
+ <button type="button" class="zoom-btn" data-zoom="out" aria-label="Alejar">−</button>
+ <button type="button" class="zoom-btn reset" data-zoom="reset">Restablecer</button>
+ <span class="zoom-help">También puedes usar la rueda del ratón y arrastrar para desplazarte.</span>
+ <span id="zoom-level" style="margin-left:auto;color:#c4b5fd;font:700 12px Inter,Segoe UI,Arial">100%</span>
+</div>
 <svg id="neural-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}"
-     style="display:block;width:100%;min-width:900px;height:auto" aria-label="Red neuronal tributaria interactiva">
+     style="display:block;width:100%;height:auto;touch-action:none;cursor:grab" aria-label="Red neuronal tributaria interactiva">
 <defs>
  <pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse">
   <path d="M26 0H0V26" fill="none" stroke="#263958" stroke-width=".8" opacity=".62"/>
@@ -187,11 +199,12 @@ for x, color, label, sub in [
     svg.append(text_svg(x+2, 76, sub, 8, "#8093b5", 550))
 
 paths = [
-    (145,255,500,255,"#438cff"),(500,255,855,255,"#b46cff"),(855,255,1210,255,"#12c8b5"),
-    (145,535,500,535,"#438cff"),(500,535,855,535,"#b46cff"),(855,535,1210,535,"#12c8b5"),
-    (145,255,500,535,"#438cff"),(145,535,500,255,"#438cff"),
-    (500,255,855,535,"#b46cff"),(500,535,855,255,"#b46cff"),
-    (855,255,1210,535,"#12c8b5"),(855,535,1210,255,"#12c8b5"),
+    (145,220,500,305,"#438cff"),(145,390,500,305,"#438cff"),
+    (500,305,855,305,"#b46cff"),(855,305,1210,305,"#12c8b5"),
+    (145,570,500,570,"#438cff"),(500,570,855,570,"#b46cff"),(855,570,1210,570,"#12c8b5"),
+    (145,220,500,570,"#438cff"),(145,570,500,305,"#438cff"),
+    (500,305,855,570,"#b46cff"),(500,570,855,305,"#b46cff"),
+    (855,305,1210,570,"#12c8b5"),(855,570,1210,305,"#12c8b5"),
 ]
 for x1,y1,x2,y2,color in paths:
     svg.append(f'<path d="M{x1} {y1} C{(x1+x2)/2} {y1}, {(x1+x2)/2} {y2}, {x2} {y2}" fill="none" stroke="{color}" stroke-width="1.15" opacity=".22"/>')
@@ -226,18 +239,32 @@ svg += ['</svg>', '''
 #neural-svg .node{outline:none}#neural-svg .node:hover .halo,#neural-svg .node:focus .halo{opacity:.3;filter:url(#glow)}
 #neural-svg .node.selected circle:nth-of-type(2){stroke-width:4;filter:url(#glow)}
 #neural-svg .flow-line{animation:flow 4.5s linear infinite}@keyframes flow{to{stroke-dashoffset:-56}}
+#neural-wrap .zoom-btn{border:1px solid #385174;background:#1a2b47;color:#edf4ff;border-radius:7px;padding:5px 11px;font-weight:800;cursor:pointer}
+#neural-wrap .zoom-btn:hover{background:#294269}#neural-wrap .zoom-btn.reset{font-size:11px;font-weight:650}
+#neural-wrap .zoom-help{color:#8093b5;font:11px Inter,Segoe UI,Arial;margin-left:5px}
+@media(max-width:700px){#neural-wrap .zoom-help{display:none}}
 @media(prefers-reduced-motion:reduce){.flow-line{animation:none}}
 </style>
 <script>
 (function(){const root=document.getElementById('neural-wrap');if(!root)return;
+ const svg=root.querySelector('#neural-svg');
  const ns=root.querySelectorAll('.node'),title=root.querySelector('#node-title'),detail=root.querySelector('#node-detail');
- function activate(el){ns.forEach(n=>n.classList.remove('selected'));el.classList.add('selected');
- title.textContent=el.dataset.title||'Nodo tributario';detail.textContent=el.dataset.detail||'';}
- ns.forEach(el=>{el.addEventListener('click',()=>activate(el));el.addEventListener('keydown',e=>{
- if(e.key==='Enter'||e.key===' '){e.preventDefault();activate(el);}});});})();
+ const zoomLabel=root.querySelector('#zoom-level');
+ const base={x:0,y:0,w:1400,h:760};let view={...base},drag=null;
+ function applyView(){svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);zoomLabel.textContent=Math.round(base.w/view.w*100)+'%';}
+ function zoom(factor,cx=view.x+view.w/2,cy=view.y+view.h/2){const nw=Math.max(base.w/2.5,Math.min(base.w*1.8,view.w/factor));const nh=nw*base.h/base.w;
+ const rx=(cx-view.x)/view.w,ry=(cy-view.y)/view.h;view={x:cx-rx*nw,y:cy-ry*nh,w:nw,h:nh};applyView();}
+ root.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{const z=b.dataset.zoom;if(z==='in')zoom(1.25);else if(z==='out')zoom(1/1.25);else{view={...base};applyView();}}));
+ svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;zoom(e.deltaY<0?1.15:1/1.15,view.x+px*view.w,view.y+py*view.h);},{passive:false});
+ svg.addEventListener('pointerdown',e=>{if(e.target.closest('.node'))return;drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y};svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing';});
+ svg.addEventListener('pointermove',e=>{if(!drag)return;const r=svg.getBoundingClientRect();view.x=drag.vx-(e.clientX-drag.x)*view.w/r.width;view.y=drag.vy-(e.clientY-drag.y)*view.h/r.height;applyView();});
+ function stopDrag(){drag=null;svg.style.cursor='grab';}svg.addEventListener('pointerup',stopDrag);svg.addEventListener('pointercancel',stopDrag);
+ function activate(el){ns.forEach(n=>n.classList.remove('selected'));el.classList.add('selected');title.textContent=el.dataset.title||'Nodo tributario';detail.textContent=el.dataset.detail||'';}
+ ns.forEach(el=>{el.addEventListener('click',()=>activate(el));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate(el);}});});
+ applyView();})();
 </script>
 ''']
-components.html("".join(svg), height=760, scrolling=False)
+components.html("".join(svg), height=820, scrolling=False)
 
 st.markdown('<p class="note">Selecciona los nodos para explorar la red. Las conexiones animadas representan el flujo conceptual desde la LRTI hacia el IVA y el Impuesto a la Renta.</p>', unsafe_allow_html=True)
 
@@ -255,6 +282,11 @@ with col_iva:
     compras_mes = st.number_input(
         "Compras del mes (USD sin IVA)", min_value=0.0, step=500.0,
         key="compras_mes", format="%.2f"
+    )
+    iva_compras_pagado = st.number_input(
+        "IVA pagado en compras (USD)", min_value=0.0, step=50.0,
+        key="iva_compras_pagado", format="%.2f",
+        help="Ingresa el IVA que consta en las facturas de compra. Solo será crédito tributario en la medida en que cumpla los requisitos legales."
     )
     tipo_tarifa = st.selectbox(
         "Tarifa IVA aplicable", [15.0, 8.0, 5.0, 0.0],
@@ -279,7 +311,7 @@ with col_ir:
 
 # Recalcular con los valores actuales.
 iva_en_ventas = ventas_mes * (tipo_tarifa / 100.0)
-credito_tributario = compras_mes * (tipo_tarifa / 100.0)
+credito_tributario = iva_compras_pagado
 iva_retenido = retenciones_recibidas * 0.07
 iva_pagar_calc = iva_en_ventas - credito_tributario - iva_retenido
 iva_a_pagar = max(0.0, iva_pagar_calc)
@@ -297,6 +329,7 @@ if st.button("🔄 Actualizar red neuronal", type="primary", use_container_width
 st.markdown('<div class="section-title">📊 Resultados del procesamiento</div>', unsafe_allow_html=True)
 metrics = [
     ("IVA generado", money(iva_en_ventas)),
+    ("IVA pagado en compras", money(iva_compras_pagado)),
     ("Crédito tributario estimado", money(credito_tributario)),
     ("IVA a pagar", money(iva_a_pagar)),
     ("Saldo IVA a favor", money(iva_a_favor)),
@@ -305,9 +338,9 @@ metrics = [
     ("Retenciones de renta estimadas", money(renta_retenida)),
     ("Impuesto a la renta a pagar", money(renta_a_pagar)),
 ]
-metric_cols = st.columns(4)
+metric_cols = st.columns(3)
 for i, (label, value) in enumerate(metrics):
-    with metric_cols[i % 4]:
+    with metric_cols[i % 3]:
         st.markdown(
             f'<div class="metric-card"><div class="metric-label">{esc(label)}</div>'
             f'<div class="metric-value">{esc(value)}</div></div>',
